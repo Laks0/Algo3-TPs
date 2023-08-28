@@ -10,12 +10,15 @@ pair<int, int> bordes(pair<int, int> a, pair<int, int> b) {
 
 // Si no es posible ningún camino devuelve {1440, 0}
 pair<int,int> caminos(const vector<vector<char>>& mapa, vector<vector<bool>>& usados, int x, int y, int ultX, int ultY, int longitud) {
-	// Llegamos
-	if (x == 0 && y == 0) {
-		return {longitud, longitud};
-	}
-
 	pair<int, int> total = {1440, 0};
+
+	// Llegamos
+	if (x == mapa.size()-1 && y == mapa[0].size()-1) {
+		if (mapa[x][y] != '#') {
+			return {longitud, longitud};
+		}
+		return total;
+	}
 
 	// Fuera del mapa
 	if (x >= mapa.size() || x < 0 || y >= mapa[0].size() || y < 0) {
@@ -96,7 +99,7 @@ int main() {
 
 		vector<vector<bool>> usados = vector<vector<bool>>(n, vector<bool>(m, false));
 
-		pair<int, int> res = caminos(mapa, usados, n-1, m-1, n-1, m-1, 0);
+		pair<int, int> res = caminos(mapa, usados, 0, 0, 0, 0, 0);
 
 		resultados[i] = res;
 	}
