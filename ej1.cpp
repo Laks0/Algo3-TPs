@@ -87,9 +87,9 @@ int main() {
 
 	for (int i = 0; i < c; i++) {
 		int n, m, e;
-		cin >> n >> m;
+		cin >> m >> n;
 
-		vector<vector<char>> mapa = vector<vector<char>>(n, vector<char>(m, '#'));
+		vector<vector<char>> mapa(n, vector<char>(m, '#'));
 
 		for (int y = 0; y < m; y++) {
 			for (int x = 0; x < n; x++) {
@@ -97,7 +97,7 @@ int main() {
 			}
 		}
 
-		vector<vector<bool>> usados = vector<vector<bool>>(n, vector<bool>(m, false));
+		vector<vector<bool>> usados(n, vector<bool>(m, false));
 
 		pair<int, int> res = caminos(mapa, usados, 0, 0, 0, 0, 0);
 
