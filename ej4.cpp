@@ -5,76 +5,85 @@
 
 using namespace std;
 
-// Placeholder ineficiente
-int costo(const vector<int>& puestos, const vector<int>& postas) {
+int costo(const vector<int>& puestos, const vector<int>& postas, vector<int>& contribuciones, vector<int>& masCercano, int i) {
 	int c = 0;
-	for (int i = 0; i < puestos.size(); i++) {
-		int minimo = 1e6;
+	int ubicacion = puestos[postas[i]];
 
-		for (int p : postas) {
-			int d = abs(puestos[p] - puestos[i]);
-			minimo = min(d, minimo);
+	for (int j = 0; j < contribuciones.size(); j++) {
+		if (masCercano[j] == i) {
+			int minimo = 1e7;
+			int cercano = 0;
+			for (int x = 0; x < postas.size(); x++) {
+				int dist = abs(puestos[j] - puestos[postas[x]]);
+				if (dist < minimo) {
+					minimo = dist;
+					cercano = x;
+				}
+			}
+
+			contribuciones[j] = minimo;
+			masCercano[j] = cercano;
 		}
 
-		c += minimo;
+		if (contribuciones[j] > abs(puestos[j] - ubicacion)) {
+			contribuciones[j] = abs(puestos[j] - ubicacion);
+			masCercano[j] = i;
+		}
+
+		c += contribuciones[j];
 	}
+
 	return c;
 }
 
-bool esMejorSolucion(vector<int> a, vector<int> b) {
-	for (int i = 0; i < min(a.size(), b.size()); i++) {
-		if (a[i] == b[i]) {
-			continue;
-		}
-		if (a[i] > b[i]) {
-			return false;
-		}
-		if (a[i] < b[i]) {
-			return true;
-		}
-	}
-	return true;
-}
-
-void reducirSolucion(const vector<int>& puestos, vector<int>& postas, vector<int>& mejor, int i, int minimoCosto) {
-	if (i >= postas.size()) {
+void solucionOptima(const vector<int>& puestos, vector<int>& postas, int i, int mejorCosto, vector<int>& mejorSol, vector<int>& contribuciones, vector<int>& masCercano) {
+	if (i < 0) {
 		return;
 	}
 
 	int posInicial = postas[i];
 
-	for (int x = posInicial; x >= 0; x--) {
-		if (i > 0 && postas[i] <= postas[i-1]) {
-			postas[i] = posInicial;
+	for (int x = postas[i]; x < puestos.size(); x++) {
+		if (i < postas.size() - 1 && x >= postas[i+1]) {
 			break;
 		}
-
-		postas[i]--;
-		if (costo(puestos,postas) == minimoCosto && esMejorSolucion(postas, mejor)) {
-			mejor = postas;
+		if (mejorSol.size() > 0) {
+			return;
 		}
 
-		reducirSolucion(puestos, postas, mejor, i+1, minimoCosto);
+		postas[i] = x;
+
+		if (costo(puestos, postas, contribuciones, masCercano, i) == mejorCosto) {
+			mejorSol = postas;
+			return;
+		}
+
+		solucionOptima(puestos, postas, i-1, mejorCosto, mejorSol, contribuciones, masCercano);
 	}
 
 	postas[i] = posInicial;
+	costo(puestos, postas, contribuciones, masCercano, i);
 }
 
 int mejorDist(const vector<int>& puestos, int n, vector<int>& postas) {
 	/* Las postas solo pueden ir enfrente de puestos, las codificamos
 	** con el número de puesto en el que están */
 
+	// Estructuras de memorización para calcular el costo
+	vector<int> contribuciones(puestos.size(), 1e7); // Cuánto contribuye al costo cada puesto
+	vector<int> masCercano(puestos.size(), 0); // La posta más cercana a cada puesto
+
 	int mejorCosto;
 
 	for (int i = 0; i < n; i++) {
 		postas.push_back(0);
 
-		int costoMinimo = costo(puestos, postas);
+		int costoMinimo = 1e7;
 		int mejorPos = postas[i];
 
 		for (int x = 0; x < puestos.size(); x++) {
 			postas[i] = x;
-			int nuevoCosto = costo(puestos, postas);
+			int nuevoCosto = costo(puestos, postas, contribuciones, masCercano, i);
 
 			if (nuevoCosto < costoMinimo || ( nuevoCosto == costoMinimo && postas[i] < mejorPos )) {
 				costoMinimo = nuevoCosto;
@@ -83,16 +92,17 @@ int mejorDist(const vector<int>& puestos, int n, vector<int>& postas) {
 		}
 
 		postas[i] = mejorPos;
-		mejorCosto = costoMinimo;
+		mejorCosto = costo(puestos, postas, contribuciones, masCercano, i);
 	}
 
-	sort(postas.begin(), postas.end());
+	vector<int> mejorSol;
+	for (int i = 0; i < postas.size(); i++) {
+		postas[i] = i;
+	}
 
-	// Encontrada una solución optima, se busca la menor lexicográficamente
-	vector<int> mejorSolucion = postas;
-	reducirSolucion(puestos, postas, mejorSolucion, 0, mejorCosto);
+	solucionOptima(puestos, postas, postas.size() - 1, mejorCosto, mejorSol, contribuciones, masCercano);
 
-	postas = mejorSolucion;
+	postas = mejorSol;
 
 	// Transformar a posiciones
 	for (int i = 0; i < n; i++) {
@@ -118,7 +128,7 @@ int main() {
 		int res = mejorDist(puestos, n, postas);
 
 		cout << res << endl;
-		cout << puestos[0];
+		cout << postas[0];
 		for (int j = 1; j < postas.size(); j++) {
 			cout << " " << postas[j];
 		}
