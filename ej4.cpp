@@ -31,7 +31,10 @@ int costo(const vector<int>& puestos, const vector<int>& postas, vector<int>& ap
 	return c;
 }
 
-// Backtracking yendo en orden lexicográfico de las posibles soluciones
+/* Backtracking yendo en orden lexicográfico de las posibles soluciones
+ * Como en la mejor solución las postas están siempre en el mismo lugar
+ * que un puesto, las codificamos directamente con el índice de puesto 
+ * que corresponde. Esto hace más eficiente también el cálculo del costo*/
 int ponerPostas(const vector<int>& puestos, vector<int>& postas, vector<int>& mejorSol, vector<int>& aportes, int costoActual, int costoFijo,int mejorCosto, int i, int k) {
 	if (k == 0) {
 		if (costoActual < mejorCosto) {
@@ -39,8 +42,19 @@ int ponerPostas(const vector<int>& puestos, vector<int>& postas, vector<int>& me
 		}
 		return costoActual;
 	}
-	if (i >= puestos.size() || i + k > puestos.size() || costoFijo > mejorCosto) {
+	if (i >= puestos.size() || costoFijo > mejorCosto) {
 		return 1e7;
+	}
+	// Llenar todos los espacios que quedan
+	if (i == puestos.size() - k) {
+		if (costoFijo < mejorCosto) {
+			mejorSol = postas;
+
+			for (int x = i; x < puestos.size(); x++) {
+				mejorSol.push_back(x);
+			}
+		}
+		return costoFijo;
 	}
 
 	vector<int> memAportes(aportes);
