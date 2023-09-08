@@ -5,8 +5,7 @@
 
 using namespace std;
 
-// Placeholder ineficiente
-int costo(const vector<int>& puestos, const vector<int>& postas, vector<int>& aportes, int costoAnterior) {
+int costo(const vector<int>& puestos, const vector<int>& postas, vector<int>& aportes, int costoAnterior, int& costoFijo) {
 	int c = costoAnterior;
 
 	// Los únicos aportes al costo que cambian son los de los puestos después de
@@ -25,36 +24,37 @@ int costo(const vector<int>& puestos, const vector<int>& postas, vector<int>& ap
 		aportes[i] = min(aportes[i], abs(puestos[i] - posicionUltimaPosta));
 
 		c += aportes[i];
+		if (i < posicionUltimaPosta)
+			costoFijo += aportes[i];
 	}
 
 	return c;
 }
 
-int ponerPostas(const vector<int>& puestos, vector<int>& postas, vector<int>& mejorSol, vector<int>& aportes, int costoActual, int mejorCosto, int i, int k) {
-	// Backtracking yendo en orden lexicográfico de las posibles soluciones
-
-	if (postas.size() >= k) {
+// Backtracking yendo en orden lexicográfico de las posibles soluciones
+int ponerPostas(const vector<int>& puestos, vector<int>& postas, vector<int>& mejorSol, vector<int>& aportes, int costoActual, int costoFijo,int mejorCosto, int i, int k) {
+	if (k == 0) {
 		if (costoActual < mejorCosto) {
 			mejorSol = postas;
 		}
 		return costoActual;
 	}
-	if (i >= puestos.size() || i + k - postas.size() > puestos.size()) {
+	if (i >= puestos.size() || i + k > puestos.size() || costoFijo > mejorCosto) {
 		return 1e7;
 	}
 
 	vector<int> memAportes(aportes);
 
 	postas.push_back(i);
-	int nuevoCosto = costo(puestos, postas, aportes, costoActual);
-	int poniendo = ponerPostas(puestos, postas, mejorSol, aportes, nuevoCosto, mejorCosto, i + 1, k);
+	int nuevoCosto = costo(puestos, postas, aportes, costoActual, costoFijo);
+	int poniendo = ponerPostas(puestos, postas, mejorSol, aportes, nuevoCosto, costoFijo, mejorCosto, i + 1, k - 1);
 	if (poniendo < mejorCosto) {
 		mejorCosto = poniendo;
 	}
 
 	postas.pop_back();
 	aportes = memAportes;
-	int sinPoner = ponerPostas(puestos, postas, mejorSol, aportes, costoActual, mejorCosto, i + 1, k);
+	int sinPoner = ponerPostas(puestos, postas, mejorSol, aportes, costoActual, costoFijo, mejorCosto, i + 1, k);
 	if (sinPoner < mejorCosto) {
 		mejorCosto = sinPoner;
 	}
@@ -86,7 +86,7 @@ int main() {
 		vector<int> postas;
 		vector<int> mejorSol;
 
-		int res = ponerPostas(puestos, postas, mejorSol, aportes, n*1e5, 1e7, 0, k);
+		int res = ponerPostas(puestos, postas, mejorSol, aportes, n*1e5, 0, 1e7, 0, k);
 
 		pasarACoordenadas(puestos, mejorSol);
 
