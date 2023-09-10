@@ -5,81 +5,92 @@
 
 using namespace std;
 
-int costo(const vector<int>& puestos, const vector<int>& postas, vector<int>& aportes, int costoAnterior, int& costoFijo) {
-	int c = costoAnterior;
+int ultimoCostoFijo(const vector<int>& puestos, const vector<int>& postas) {
+	int c = 0;
 
-	// Los únicos aportes al costo que cambian son los de los puestos después de
-	// la anteúltima posta que pusimos
 	int principio = 0;
-	if (postas.size() > 1) {
-		principio = puestos[postas[postas.size() - 2]];
+	if (postas.size() >= 2) {
+		principio = postas[postas.size() - 2];
 	}
 
-	// Hay que hacer esto porque guardamos el índice del puesto que está enfrente de la posta
-	int posicionUltimaPosta = puestos[postas[postas.size() - 1]];
+	// Ubicaciones en coordenadas de los límites del cálculo
+	// La posta anterior
+	int a = -1e5;
+	if (postas.size() >= 2) {
+		a = puestos[principio];
+	}
 
-	for (int i = principio; i < puestos.size(); i++) {
-		c -= aportes[i];
+	// La última posta
+	int b = puestos[postas[postas.size() - 1]];
 
-		aportes[i] = min(aportes[i], abs(puestos[i] - posicionUltimaPosta));
-
-		c += aportes[i];
-		if (i < posicionUltimaPosta)
-			costoFijo += aportes[i];
+	for (int i = principio; i < postas[postas.size() - 1]; i++) {
+		c += min(abs(puestos[i] - a), abs(puestos[i] - b));
 	}
 
 	return c;
 }
 
-/* Backtracking yendo en orden lexicográfico de las posibles soluciones
- * Como en la mejor solución las postas están siempre en el mismo lugar
- * que un puesto, las codificamos directamente con el índice de puesto 
- * que corresponde. Esto hace más eficiente también el cálculo del costo*/
-int ponerPostas(const vector<int>& puestos, vector<int>& postas, vector<int>& mejorSol, vector<int>& aportes, int costoActual, int costoFijo,int mejorCosto, int i, int k) {
-	if (k == 0) {
-		if (costoActual < mejorCosto) {
-			mejorSol = postas;
+int ponerPostas(const vector<int>& puestos, int i, int k, int dist, vector<vector<vector<int>>>& mejores, vector<int>& postas) {
+	if (k == 0 && i == puestos.size()) {
+		int costoFinal = 0;
+
+		// Coordenada de la última posta
+		int ultimaPosta = puestos[postas[postas.size() - 1]];
+
+		for (int x = postas[postas.size() - 1]; x < puestos.size(); x++) {
+			costoFinal += abs(puestos[x] - ultimaPosta);
 		}
-		return costoActual;
+
+		return costoFinal;
 	}
-	if (i >= puestos.size() || costoFijo > mejorCosto) {
+
+	if (i == puestos.size()) {
 		return 1e7;
 	}
-	// Llenar todos los espacios que quedan
-	if (i == puestos.size() - k) {
-		if (costoFijo < mejorCosto) {
-			mejorSol = postas;
 
-			for (int x = i; x < puestos.size(); x++) {
-				mejorSol.push_back(x);
-			}
-		}
-		return costoFijo;
+	if (k == 0) {
+		int alFinal = ponerPostas(puestos, puestos.size(), k, dist + puestos.size() - i, mejores, postas);
+		mejores[i][k][dist] = alFinal;
 	}
 
-	vector<int> memAportes(aportes);
+	if (mejores[i][k][dist] != -1) {
+		return mejores[i][k][dist];
+	}
 
 	postas.push_back(i);
-	int nuevoCosto = costo(puestos, postas, aportes, costoActual, costoFijo);
-	int poniendo = ponerPostas(puestos, postas, mejorSol, aportes, nuevoCosto, costoFijo, mejorCosto, i + 1, k - 1);
-	if (poniendo < mejorCosto) {
-		mejorCosto = poniendo;
-	}
+	int costoFijo = ultimoCostoFijo(puestos, postas);
+	int poniendo = ponerPostas(puestos, i+1, k-1, 0, mejores, postas) + costoFijo;
 
 	postas.pop_back();
-	aportes = memAportes;
-	int sinPoner = ponerPostas(puestos, postas, mejorSol, aportes, costoActual, costoFijo, mejorCosto, i + 1, k);
-	if (sinPoner < mejorCosto) {
-		mejorCosto = sinPoner;
-	}
+	int sinPoner = ponerPostas(puestos, i+1, k, dist + 1, mejores, postas);
 
-	return mejorCosto;
+	mejores[i][k][dist] = min(poniendo, sinPoner);
+
+	return mejores[i][k][dist];
 }
 
-void pasarACoordenadas(const vector<int>& puestos, vector<int>& postas) {
-	for (int i = 0; i < postas.size(); i++) {
-		postas[i] = puestos[postas[i]];
+vector<int> reconstruirSol(int k, const vector<vector<vector<int>>>& mejores, const vector<int> puestos) {
+	vector<int> postas;
+
+	int dist = 0;
+
+	for (int i = 0; i < puestos.size() - 1; i++) {
+		int poniendo = 1e5;
+		if (k > 0)
+			poniendo = mejores[i+1][k-1][0];
+		int sinPoner = mejores[i+1][k][dist+1];
+
+		if (sinPoner != -1 && sinPoner > poniendo) {
+			dist++;
+		}
+		if (poniendo != -1 && poniendo <= sinPoner) {
+			k--;
+			dist = 0;
+			postas.push_back(puestos[i]);
+		}
 	}
+
+	return postas;
 }
 
 int main() {
@@ -94,21 +105,20 @@ int main() {
 			cin >> puestos[x];
 		}
 
-		int maxPos = puestos[n-1];
-		vector<int> aportes(n, 1e5);
-
 		vector<int> postas;
+
+		// Estructura de memorización
+		vector<vector<vector<int>>> mejores(n, vector<vector<int>>(k+1, vector<int>(n, -1)));
+
 		vector<int> mejorSol;
+		int res = ponerPostas(puestos, 0, k, 0, mejores, postas);
 
-		int res = ponerPostas(puestos, postas, mejorSol, aportes, n*1e5, 0, 1e7, 0, k);
-
-		pasarACoordenadas(puestos, mejorSol);
+		postas = reconstruirSol(k, mejores, puestos);
 
 		cout << res << endl;
-		cout << mejorSol[0];
-		for (int j = 1; j < k; j++) {
-			cout << " " << mejorSol[j];
+
+		for (int p : postas) {
+			cout << p << endl;
 		}
-		cout << endl;
 	}
 }
