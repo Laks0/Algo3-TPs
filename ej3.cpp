@@ -4,138 +4,105 @@
 
 using namespace std;
 
-bool llegaAlFinal(vector<int> valores, int i, int totalAnterior, int objetivo,
-                  vector<pair<vector<char>, vector<char>>>& resultados,
-                  bool suma) {
-    // cout << "i: " << i << endl
-    //      << "total anterior: " << totalAnterior << endl
-    //      << "siguiente: " << valores[i] << endl
-    //      << "total siguiente: " << valores[i] + totalAnterior << endl
-    //      << "resultados en [i][totalAnterior] (Positivo): '"
-    //      << resultados[i].first[abs(totalAnterior)] << "'" << endl
-    //      << "resultados en [i][totalAnterior] (Negativo): '"
-    //      << resultados[i].second[abs(totalAnterior)] << "'" << endl;
-    if (totalAnterior >= 0) {
+bool llegaAlFinal(vector<int> valores, int i, int totalActual, int objetivo,
+                  vector<pair<vector<char>, vector<char>>>& resultados) {
+    if (totalActual >= 0) {
         if (i + 1 == valores.size()) {
-            if (totalAnterior + valores[i] == objetivo) {
-                // cout << "En este paso llego haciendo una suma" << endl <<
-                // endl;
-                resultados[i].first[totalAnterior] = '+';
+            if (totalActual + valores[i] == objetivo) {
+                if (resultados[i].first[totalActual] == '-') {
+                    resultados[i].first[totalActual] = '?';
+                } else {
+                    resultados[i].first[totalActual] = '+';
+                }
+
                 return true;
-            } else if (totalAnterior - valores[i] == objetivo) {
-                // cout << "En este paso llego haciendo una resta" << endl <<
-                // endl;
-                resultados[i].first[totalAnterior] = '-';
+            } else if (totalActual - valores[i] == objetivo) {
+                if (resultados[i].first[totalActual] == '+') {
+                    resultados[i].first[totalActual] = '?';
+                } else {
+                    resultados[i].first[totalActual] = '-';
+                }
                 return true;
             } else {
-                // cout << "En este paso no llego" << endl << endl;
-                resultados[i].first[totalAnterior] = 'X';
+                if (resultados[i].first[totalActual] == 'O') {
+                    resultados[i].first[totalActual] = 'X';
+                }
                 return false;
             }
         }
-
-        if (resultados[i].first[totalAnterior] != 'O' &&
-            resultados[i].first[totalAnterior] != '\0' &&
-            int(resultados[i].first[totalAnterior]) != 0) {
-            if (resultados[i].first[totalAnterior] == '+' && !suma) {
-                // cout << "En el " << i
-                //      << "hay una suma pero estoy viendo la resta" << endl;
-                bool llegaRestando =
-                    llegaAlFinal(valores, i + 1, totalAnterior - valores[i],
-                                 objetivo, resultados, false);
-                if (llegaRestando) {
-                    resultados[i].first[totalAnterior] = '?';
-                }
-            }
-
-            return resultados[i].first[totalAnterior] != 'X';
+        if (resultados[i].first[totalActual] != 'O') {
         } else {
-            bool llegaSumando =
-                llegaAlFinal(valores, i + 1, totalAnterior + valores[i],
-                             objetivo, resultados, true);
-            bool llegaRestando =
-                llegaAlFinal(valores, i + 1, totalAnterior - valores[i],
-                             objetivo, resultados, false);
+            bool llegaSumando = llegaAlFinal(
+                valores, i + 1, totalActual + valores[i], objetivo, resultados);
+            bool llegaRestando = llegaAlFinal(
+                valores, i + 1, totalActual - valores[i], objetivo, resultados);
             if (llegaSumando && llegaRestando) {
-                resultados[i].first[totalAnterior] = '?';
+                resultados[i].first[totalActual] = '?';
                 return true;
             } else if (llegaSumando) {
-                resultados[i].first[totalAnterior] = '+';
+                resultados[i].first[totalActual] = '+';
                 return true;
             } else if (llegaRestando) {
-                resultados[i].first[totalAnterior] = '-';
+                resultados[i].first[totalActual] = '-';
                 return true;
             } else {
-                resultados[i].first[totalAnterior] = 'X';
-                return true;
+                resultados[i].first[totalActual] = 'X';
+                return false;
             }
         }
     } else {
         if (i + 1 == valores.size()) {
-            if (totalAnterior + valores[i] == objetivo) {
-                // cout << "En este paso llego haciendo una suma" << endl <<
-                // endl;
-                resultados[i].second[abs(totalAnterior)] = '+';
+            if (totalActual + valores[i] == objetivo) {
+                if (resultados[i].second[abs(totalActual)] == '-') {
+                    resultados[i].second[abs(totalActual)] = '?';
+                } else {
+                    resultados[i].second[abs(totalActual)] = '+';
+                }
+
                 return true;
-            } else if (totalAnterior - valores[i] == objetivo) {
-                // cout << "En este paso llego haciendo una resta" << endl <<
-                // endl;
-                resultados[i].second[abs(totalAnterior)] = '-';
+            } else if (totalActual - valores[i] == objetivo) {
+                if (resultados[i].second[abs(totalActual)] == '+') {
+                    resultados[i].second[abs(totalActual)] = '?';
+                } else {
+                    resultados[i].second[abs(totalActual)] = '-';
+                }
                 return true;
             } else {
-                resultados[i].second[abs(totalAnterior)] = 'X';
-                // cout << "En este paso no llego" << endl << endl;
+                if (resultados[i].second[abs(totalActual)] == 'O') {
+                    resultados[i].second[abs(totalActual)] = 'X';
+                }
                 return false;
             }
         }
-
-        if (resultados[i].first[totalAnterior] != 'O' &&
-            resultados[i].first[totalAnterior] != '\0' &&
-            int(resultados[i].first[totalAnterior]) != 0) {
-            return resultados[i].second[abs(totalAnterior)] != 'X';
+        if (resultados[i].second[abs(totalActual)] != 'O') {
+            return resultados[i].second[abs(totalActual)] != 'X';
         } else {
-            bool llegaSumando =
-                llegaAlFinal(valores, i + 1, totalAnterior + valores[i],
-                             objetivo, resultados, true);
-            bool llegaRestando =
-                llegaAlFinal(valores, i + 1, totalAnterior - valores[i],
-                             objetivo, resultados, false);
+            bool llegaSumando = llegaAlFinal(
+                valores, i + 1, totalActual + valores[i], objetivo, resultados);
+            bool llegaRestando = llegaAlFinal(
+                valores, i + 1, totalActual - valores[i], objetivo, resultados);
             if (llegaSumando && llegaRestando) {
-                resultados[i].second[abs(totalAnterior)] = '?';
+                resultados[i].second[abs(totalActual)] = '?';
                 return true;
             } else if (llegaSumando) {
-                resultados[i].second[abs(totalAnterior)] = '+';
+                resultados[i].second[abs(totalActual)] = '+';
                 return true;
             } else if (llegaRestando) {
-                resultados[i].second[abs(totalAnterior)] = '-';
+                resultados[i].second[abs(totalActual)] = '-';
                 return true;
             } else {
-                resultados[i].second[abs(totalAnterior)] = 'X';
-                return true;
+                resultados[i].second[abs(totalActual)] = 'X';
+
+                return false;
             }
         }
     }
-}
-
-void mostrarTodo(vector<pair<vector<char>, vector<char>>> resultados) {
-    for (int i = 0; i < resultados.size(); i++) {
-        for (int j = 0; j < resultados[i].first.size(); j++) {
-            cout << resultados[i].first[j];
-        }
-    }
-
-    cout << endl << "------------------------" << endl;
-    for (int i = 0; i < resultados.size(); i++) {
-        for (int j = 0; j < resultados[i].second.size(); j++) {
-            cout << resultados[i].second[j];
-        }
-    }
+    return false;
 }
 
 void mostrarSecuencia(vector<pair<vector<char>, vector<char>>> resultados,
                       vector<int> valores) {
     string resultado = "";
-    // resultado += resultados[0].first[0];
 
     for (int i = 0; i < valores.size(); i++) {
         bool haySuma = false;
@@ -200,15 +167,9 @@ int main() {
             cin >> valor;
             valores[j] = valor / 100;
         }
-
-        bool llegaSumando =
-            llegaAlFinal(valores, 0, 0, objetivo, resultados, true);
-        bool llegaRestando =
-            llegaAlFinal(valores, 0, 0, objetivo, resultados, false);
-        cout << llegaSumando << " " << llegaRestando << endl;
+        bool llega = llegaAlFinal(valores, 0, 0, objetivo, resultados);
 
         mostrarSecuencia(resultados, valores);
-        mostrarTodo(resultados);
     }
 
     return 0;
