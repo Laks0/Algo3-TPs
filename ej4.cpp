@@ -5,6 +5,10 @@
 
 using namespace std;
 
+// Calcula el costo sumado entre las últimas proveedurías
+// habiendo puesto una en puestos[a] y otra en puestos[b]
+// a = |puestos| significa que b es la primer posta
+// b = inf significa que a es la última posta
 long long ultimoCosto(const vector<int>& puestos, int a, int b) {
 	long long c = 0;
 
@@ -30,6 +34,9 @@ long long ultimoCosto(const vector<int>& puestos, int a, int b) {
 	return c;
 }
 
+// Calcula el mínimo costo posible sumado de las postas desde i
+// ult es la posición de la última posta, ult = |puestos| significa que no se puso ninguna posta
+// mejores es la estructura de memorización
 long long mejorCosto(const vector<int>& puestos, int i, int k, int ult, vector<vector<vector<long long>>>& mejores) {
 	if (k == 0 && i == puestos.size()) {
 		return ultimoCosto(puestos, ult, 3e7);
