@@ -10,9 +10,10 @@ int SIN_VER = 0, EMP = 1, FIN = 2;
 vector<vector<int>> adj;
 vector<vector<int>> hijos;
 vector<int> parent;
-vector<vector<int>> back_inf;
-vector<vector<int>> back_sup;
+vector<int> back_inf;
+vector<int> back_sup;
 vector<int> estado;
+vector<pair<int, int>> backedges;
 
 void dfs(int v, int p) {
 	estado[v] = EMP;
@@ -25,9 +26,11 @@ void dfs(int v, int p) {
 		}
 		else if (w != p) {
 			if (estado[w] == EMP) {
-				back_inf[v].push_back(w);
+				back_inf[v]++;
 			} else {
-				back_sup[v].push_back(w);
+				back_sup[v]++;
+				// Guardo el parent primero
+				backedges.push_back({v,w});
 			}
 		}
 	}
@@ -44,8 +47,8 @@ int cubren(int v) {
 	for (int w : hijos[v]) {
 		res += cubren(w);
 	}
-	res -= back_sup[v].size();
-	res += back_inf[v].size();
+	res -= back_sup[v];
+	res += back_inf[v];
 
 	return mem[v] = res;
 }
@@ -60,9 +63,20 @@ vector<pair<int, int>> importantes() {
 
 		// Si llegó acá encontramos una importante
 		res.push_back({min(parent[v], v), max(parent[v], v)});
-		if (back_inf[v].size() == 1)
-			res.push_back({min(v, back_inf[v][0]), max(v, back_inf[v][0])});
 	}
+
+	for (pair<int,int> b : backedges) {
+		int v = b.second;
+		while (v != b.first) {
+			if (cubren(v) == 1){
+				res.push_back({min( b.first, b.second ), max( b.first, b.second )});
+				break;
+			}
+			v = parent[v];
+		}
+	}
+
+	sort(res.begin(), res.end());
 
 	return res;
 }
@@ -76,8 +90,9 @@ int main() {
 
 		adj = vector<vector<int>>(n, vector<int>());
 		hijos = vector<vector<int>>(n, vector<int>());
-		back_inf = vector<vector<int>>(n, vector<int>());
-		back_sup = vector<vector<int>>(n, vector<int>());
+		back_inf = vector<int>(n, 0);
+		back_sup = vector<int>(n, 0);
+		backedges = vector<pair<int, int>>();
 		parent = vector<int>(n);
 		estado = vector<int>(n, SIN_VER);
 		mem = vector<int>(n, -1);
@@ -90,7 +105,6 @@ int main() {
 		}
 
 		vector<pair<int, int>> res = importantes();
-		sort(res.begin(), res.end());
 
 		cout << res.size() << endl;
 		for (pair<int, int> r : res) {
