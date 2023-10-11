@@ -59,10 +59,13 @@ vector<pair<int, int>> importantes() {
 	dfs(0, -1);
 
 	for (int v = 0; v < adj.size(); v++) {
-		if (cubren(v) != 1) continue;
-
-		// Si llegó acá encontramos una importante
-		res.push_back({min(parent[v], v), max(parent[v], v)});
+		if (adj[v].size() == 2) {
+			for (int w : adj[v])
+				res.push_back({min(w, v), max(w, v)});
+			continue;
+		}
+		if (cubren(v) == 1)
+			res.push_back({min(parent[v], v), max(parent[v], v)});
 	}
 
 	for (pair<int,int> b : backedges) {
@@ -77,6 +80,7 @@ vector<pair<int, int>> importantes() {
 	}
 
 	sort(res.begin(), res.end());
+	res.erase(std::unique(res.begin(), res.end()), res.end());
 
 	return res;
 }
