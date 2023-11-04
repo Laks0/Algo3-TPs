@@ -10,10 +10,11 @@ using namespace std;
 vector<set<int>> red_de_flujo(const vector<vector<int>>& mapa) {
 	int n = mapa.size();
 
-	vector<set<int>> adj(n*n); // Los primeros n*n representan los casilleros
+	vector<set<int>> adj; // Los primeros n*n representan los casilleros
 
 	// FILAS
 	// cada fila conecta a los casilleros que la componen
+	vector<vector<int>> filas(n, vector<int>(n)); // a qué fila corresponde cada casillero
 	int ultimaFila;
 	bool nuevaFila = false;
 	for (int i = 0; i < n; i++) {
@@ -28,7 +29,7 @@ vector<set<int>> red_de_flujo(const vector<vector<int>>& mapa) {
 					adj.push_back(set<int>());
 					nuevaFila = false;
 				}
-				adj[ultimaFila].insert(i+j*n);
+				filas[i][j] = ultimaFila;
 				continue;
 			}
 			// Hay un roto, se crea una nueva fila
@@ -52,8 +53,8 @@ vector<set<int>> red_de_flujo(const vector<vector<int>>& mapa) {
 					adj.push_back(set<int>());
 					nuevaColumna = false;
 				}
-
-				adj[i+j*n].insert(ultimaColumna);
+				// La fila correspondiente a (i,j) apunta a su columna
+				adj[filas[i][j]].insert(ultimaColumna);
 				continue;
 			}
 			// Hay un roto, se crea una nueva columna
@@ -70,7 +71,7 @@ vector<set<int>> red_de_flujo(const vector<vector<int>>& mapa) {
 	adj.push_back(set<int>());
 
 	// s conecta a todas las filas
-	for (int i = n*n; i <= ultimaFila; i++) {
+	for (int i = 0; i <= ultimaFila; i++) {
 		adj[s].insert(i);
 	}
 
