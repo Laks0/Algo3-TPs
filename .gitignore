@@ -35,3 +35,5 @@
 ejemplo*
 .gdb_history
 *.sh
+
+*.py
